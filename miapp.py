@@ -96,7 +96,7 @@ class AIManager:
             # Token és költség becslés (kb. 4 karakter = 1 token)
             tokens = (len(user_prompt) + len(response.text)) // 4
             st.session_state.total_tokens += tokens
-            st.session_state.estimated_cost += (tokens / 1_000_000) * 0.075 # flash árfolyam
+            st.session_state.estimated_cost += (tokens / 1_000_000) * 0.075
             
             return response.text
         except Exception as e:
@@ -105,7 +105,6 @@ class AIManager:
 
 # --- SEGÉDFÜGGVÉNYEK ---
 def generate_qr_code():
-    """QR kódot generál az app eléréséhez."""
     try:
         url = "https://unimatee.streamlit.app" 
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
@@ -144,7 +143,7 @@ with st.sidebar:
     # Mobil elérés QR
     qr_code = generate_qr_code()
     if qr_code:
-        st.image(qr_code, caption="Megnyitás telefonon", width=150)
+        st.image(qr_code, caption="", width=150)
     
     if st.button("🗑️ Chat törlése"):
         st.session_state.messages = []
@@ -202,9 +201,7 @@ def render_chatbot():
             with st.chat_message("assistant"):
                 st.markdown(res)
             
-            # Export lehetőség
-           # chat_data = json.dumps(st.session_state.messages, indent=4, ensure_ascii=False)
-           # st.download_button("📥 Chat mentése", chat_data, file_name="unimate_chat.json")
+            
             chat_text = f"UniMate Chat Napló - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
             chat_text += "="*30 + "\n\n"
 
@@ -213,9 +210,8 @@ def render_chatbot():
                 chat_text += f"[{sender}]:\n{msg['content']}\n"
                 chat_text += "-"*20 + "\n"
 
-# Letöltő gomb TXT-ben
             st.download_button(
-                label="📥 Chat mentése (.txt)",
+                label="📥 Chat mentése ",
                 data=chat_text,
                 file_name=f"unimate_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                 mime="text/plain"
