@@ -4,8 +4,9 @@ import qrcode
 from io import BytesIO
 import time
 import json
+from datetime import datetime
 
-# --- 1. KONFIGURÁCIÓ ÉS ÁLLAPOT KEZELÉS ---
+# --- KONFIGURÁCIÓ ÉS ÁLLAPOT KEZELÉS ---
 def init_session_state():
     """Munkamenet változóinak inicializálása."""
     defaults = {
@@ -28,16 +29,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- 2. CSS A MODERN MEGJELENÉSHEZ (Mobilbarát) ---
+# --- Mobilbarát css ---
 st.markdown("""
     <style>
-        /* Mobil optimalizálás */
+        /* itt egy kis mobil optimalizálás */
         @media (max-width: 640px) {
             .main .block-container { padding: 1rem; }
             .stSidebar { width: 250px !important; }
         }
         
-        /* Kártya stílusú üzenetek */
         .stChatMessage {
             border-radius: 15px;
             padding: 15px;
@@ -46,10 +46,9 @@ st.markdown("""
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
-        /* Modern fejléc */
         h1 { font-weight: 800 !important; color: #1E3A8A; }
         
-        /* Gombok kerekítése */
+        /* Gombok kerekítése jobb kinézethez */
         .stButton>button {
             border-radius: 10px;
             font-weight: 600;
@@ -57,7 +56,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- 3. AI LOGIKA MODUL ---
+# --- AI LOGIKA MODUL ---
 class AIManager:
     @staticmethod
     def setup_api(api_key):
@@ -97,19 +96,18 @@ class AIManager:
             # Token és költség becslés (kb. 4 karakter = 1 token)
             tokens = (len(user_prompt) + len(response.text)) // 4
             st.session_state.total_tokens += tokens
-            st.session_state.estimated_cost += (tokens / 1_000_000) * 0.075 # Flash árfolyam
+            st.session_state.estimated_cost += (tokens / 1_000_000) * 0.075 # flash árfolyam
             
             return response.text
         except Exception as e:
             st.error(f"⚠️ Hiba történt: {str(e)}")
             return None
 
-# --- 4. SEGÉDFÜGGVÉNYEK ---
+# --- SEGÉDFÜGGVÉNYEK ---
 def generate_qr_code():
     """QR kódot generál az app eléréséhez."""
     try:
-        # Itt add meg az appod tényleges URL-jét, ha már élesítetted
-        url = "https://unimate-pro.streamlit.app" 
+        url = "https://unimatee.streamlit.app" 
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
         qr.add_data(url)
         qr.make(fit=True)
@@ -121,7 +119,7 @@ def generate_qr_code():
     except:
         return None
 
-# --- 5. OLDALSÁV (SIDEBAR) ---
+# --- OLDALSÁV (SIDEBAR) ---
 with st.sidebar:
     st.header("🔑 Hozzáférés")
     api_key_input = st.text_input("Google Gemini API Key", type="password")
@@ -152,7 +150,7 @@ with st.sidebar:
         st.session_state.messages = []
         st.rerun()
 
-# --- 6. UI MODULOK (FUNKCIÓK) ---
+# --- UI MODULOK (FUNKCIÓK) ---
 def render_regulations():
     st.subheader("📄 Szabályzat Elemző")
     st.info("Másold be az egyetemi szabályzat részletét az egyszerűsített elemzéshez.")
@@ -188,12 +186,10 @@ def render_email():
                 st.info("A fenti kódot kimásolhatod a jobb felső sarokban lévő gombbal.")
 
 def render_chatbot():
-    # Üzenetek megjelenítése
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Chat bemenet (Mindig alul marad)
     if prompt := st.chat_input("Kérdezz bármit az UniMate-től..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -207,15 +203,29 @@ def render_chatbot():
                 st.markdown(res)
             
             # Export lehetőség
-            chat_data = json.dumps(st.session_state.messages, indent=4, ensure_ascii=False)
-            st.download_button("📥 Chat mentése", chat_data, file_name="unimate_chat.json")
+           # chat_data = json.dumps(st.session_state.messages, indent=4, ensure_ascii=False)
+           # st.download_button("📥 Chat mentése", chat_data, file_name="unimate_chat.json")
+            chat_text = f"UniMate Chat Napló - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n"
+            chat_text += "="*30 + "\n\n"
 
-# --- 7. FŐ OLDAL ---
+            for msg in st.session_state.messages:
+                sender = "HALLGATÓ" if msg["role"] == "user" else "UNIMATE"
+                chat_text += f"[{sender}]:\n{msg['content']}\n"
+                chat_text += "-"*20 + "\n"
+
+# Letöltő gomb TXT-ben
+            st.download_button(
+                label="📥 Chat mentése (.txt)",
+                data=chat_text,
+                file_name=f"unimate_chat_{datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                mime="text/plain"
+)
+
+# --- Home Page ---
 def main():
     st.title("🎓 UniMate – Intelligens Asszisztens")
     st.markdown("##### Minden, amire egy egyetemi hallgatónak szüksége lehet.")
 
-    # Fülek létrehozása
     tabs = st.tabs(["💬 Chatbot", "📄 Szabályzat", "💡 Szakdolgozat", "📧 Email"])
     
     with tabs[0]: render_chatbot()
